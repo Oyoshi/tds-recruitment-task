@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { formatAmount, parseAmount, getCurrentTime } from '@/lib/utils';
 import { CurrencyInput } from './CurrencyInput';
 
 const mockCurrencies = [
@@ -22,18 +23,26 @@ export function CurrencyConverterForm() {
 
   const handleFirstChange = (value: string) => {
     setFirstAmount(value);
-    // @todo - move it to a utility function
-    const parsedValue = parseFloat(value);
-    const numericValue = isNaN(parsedValue) ? 0 : Math.max(0, parsedValue);
-    setSecondAmount((numericValue * EXCHANGE_RATE).toFixed(2));
+
+    if (value === '') {
+      setSecondAmount('');
+      return;
+    }
+
+    const numericValue = parseAmount(value);
+    setSecondAmount(formatAmount(numericValue * EXCHANGE_RATE));
   };
 
   const handleSecondChange = (value: string) => {
     setSecondAmount(value);
-    // @todo - move it to a utility function
-    const parsedValue = parseFloat(value);
-    const numericValue = isNaN(parsedValue) ? 0 : Math.max(0, parsedValue);
-    setFirstAmount((numericValue / EXCHANGE_RATE).toFixed(2));
+
+    if (value === '') {
+      setFirstAmount('');
+      return;
+    }
+
+    const numericValue = parseAmount(value);
+    setFirstAmount(formatAmount(numericValue / EXCHANGE_RATE));
   };
 
   return (
@@ -47,6 +56,7 @@ export function CurrencyConverterForm() {
         </CardTitle>
       </CardHeader>
       <CardContent>
+        {/* Using a form as a semantic container, even though there's no submission */}
         <form className="flex flex-col gap-4 mb-4">
           <CurrencyInput
             prefix="first"
@@ -66,7 +76,7 @@ export function CurrencyConverterForm() {
           />
         </form>
         <p className="text-xs text-center text-muted-foreground">
-          Last updated: {new Date().toLocaleTimeString()}
+          Last updated: {getCurrentTime()}
         </p>
       </CardContent>
     </Card>

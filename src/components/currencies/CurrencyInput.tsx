@@ -9,7 +9,7 @@ import {
 import { Separator } from '@/components/ui/Separator';
 
 const BORDERLESS_INPUT_CLASSES = 'border-0 bg-transparent shadow-none';
-const CURRENCY_VALUE_INPUT_PLACEHOLDER = '1.00';
+const CURRENCY_VALUE_INPUT_PLACEHOLDER = '0.00';
 const CURRENCY_CODE_INPUT_PLACEHOLDER = 'USD';
 
 type InputValueChangeHandler = (val: string) => void;
