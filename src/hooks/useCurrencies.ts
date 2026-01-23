@@ -1,4 +1,4 @@
-import { CACHE_TIMES } from '@/lib/queryClient';
+import { CACHE_TIMES } from '@/lib/constants';
 import { FXService } from '@/services/FXService';
 import { useQuery } from '@tanstack/react-query';
 
@@ -25,7 +25,12 @@ export const useCurrencies = () => {
 export const useConversion = (from: string, to: string, amount: number) => {
   return useQuery({
     queryKey: ['convert', from, to, amount],
-    queryFn: () => fxService.convert(from, to, amount),
+    queryFn: () => {
+      if (from === to) {
+        return Promise.resolve({ value: amount });
+      }
+      return fxService.convert(from, to, amount);
+    },
     enabled: !!from && !!to && amount > 0,
     staleTime: CACHE_TIMES.CONVERSION,
   });
