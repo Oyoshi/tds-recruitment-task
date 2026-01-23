@@ -29,9 +29,8 @@ Description of the task can be found in the [task.md](./task.md) file.
       cp .env.example .env
       ```
     - Open the `.env` file and replace `example` with your valid CurrencyBeacon API key.
-
-    > [!IMPORTANT]
-    > **Security Note**: Storing the `API_KEY` in `VITE_CURRENCY_BEACON_API_KEY` exposes it to the client side. This is done here **strictly for demonstration purposes**. In a production environment, API keys should be stored securely on a backend server, and the frontend should request data through a proxy or API endpoint to keep credentials safe.
+  > [!CAUTION]
+  > **Security Note**: Storing the `API_KEY` in `VITE_CURRENCY_BEACON_API_KEY` exposes it to the client side. This is done here **strictly for demonstration purposes**. In a production environment, API keys should be stored securely on a backend server, and the frontend should request data through a proxy or API endpoint to keep credentials safe.
 
 ### Running Locally
 
