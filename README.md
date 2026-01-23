@@ -1,73 +1,72 @@
-# React + TypeScript + Vite
+## Project Overview:
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Your task is to create a simple currency conversion tool similar to that which can be found on Google.
 
-Currently, two official plugins are available:
+- This should be done using the front-end framework of your choice (e.g. React, Angular, Vue.js, etc.).
+- We recommend you spend a maximum of 2 hours completing this challenge.
+- We won’t be scoring you on the design; please focus on component composition and adhering to best practices in coding.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Requirements:
 
-## React Compiler
+### Currency Selection:
 
-The React Compiler is currently not compatible with SWC. See [this issue](https://github.com/vitejs/vite-plugin-react/issues/428) for tracking the progress.
+1. Provide two select boxes for users to choose a currency to convert from and to.
+1. Fetch a list of currencies from the https://api.currencybeacon.com/v1/currencies API.
+1. Populate the select boxes with the available options returned from API.
 
-## Expanding the ESLint configuration
+### Currency Conversion:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+1. Allow users to input an amount for the “from” currency.
+1. Fetch converted value from https://api.currencybeacon.com/v1/convert API.
+1. Populate the “to” value based on the value returned from API.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## API Overview:
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- For this assessment, you will be required to make use of the following free API resource: [https://currencybeacon.com](https://currencybeacon.com/register)
+- You will need to register for a free account to get access to your `API_KEY`.
+  - Your `API_KEY` can be found on the main dashboard once you login under `API Token Information`.
+- Your application should make use of the following two API calls:
+  - https://api.currencybeacon.com/v1/currencies
+  - https://api.currencybeacon.com/v1/convert
+- Full documentation can be found here: https://currencybeacon.com/api-documentation
+- _Please ensure that you have carefully studied the API responses and selected the most appropriate nodes for the mapping of data._
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
-```
+## Submission Guidelines:
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+- Provide a link to your public repo for us to clone or email us a ZIP of the project.
+- Include clear instructions on how to run your application locally.
+- Document any assumptions or decisions you make during the development process.
+- Submit your completed project within the specified timeframe.
 
-```js
-// eslint.config.js
-import reactDom from 'eslint-plugin-react-dom';
-import reactX from 'eslint-plugin-react-x';
+## GitHub Copilot and AI use
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
-```
+We understand and appreciate that tools like GitHub Copilot have become valuable resources for many developers, enhancing productivity and efficiency in daily work. However, to ensure a fair and accurate assessment of your individual skills during this interview process, we kindly ask that you complete the assessment task without using Copilot or similar AI coding assistants. This will help us better understand your problem-solving approach and coding abilities. Thank you for your cooperation and understanding.
+
+## Evaluation Criteria:
+
+### Functionality:
+
+> Does the application meet the specified requirements? Does it accurately perform currency conversion?
+
+### Code Quality:
+
+> Is the code well-structured, readable, and maintainable? Are best practices followed?
+
+### Component Composition:
+
+> Are components appropriately structured and reused? Is there unnecessary duplication?
+
+### User Experience:
+
+> Is the user interface intuitive and easy to use? Does it provide clear feedback to users?
+
+### Additional Features:
+
+> Are any optional features implemented effectively?
+
+## Notes:
+
+- You are encouraged to use any additional libraries or tools you find necessary to complete the project efficiently.
+- Please ensure that your project is self-contained and can be easily set up and run by the evaluation team.
+- If you have any questions or need clarification on the requirements, feel free to reach out for assistance. Good luck!
+- Please refrain from using tools like GitHub Copilot.

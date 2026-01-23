@@ -7,6 +7,7 @@ import {
   SelectValue,
 } from '@/components/ui/Select';
 import { Separator } from '@/components/ui/Separator';
+import type { Currency } from '@/lib/types';
 
 const BORDERLESS_INPUT_CLASSES = 'border-0 bg-transparent shadow-none';
 const CURRENCY_VALUE_INPUT_PLACEHOLDER = '0.00';
@@ -15,7 +16,7 @@ const CURRENCY_CODE_INPUT_PLACEHOLDER = 'USD';
 type InputValueChangeHandler = (val: string) => void;
 
 interface CurrencyInputProps {
-  currencies: { code: string; name: string }[];
+  currencies: Currency[];
   prefix: string;
   value: string;
   onValueChange: InputValueChangeHandler;
@@ -53,8 +54,8 @@ export function CurrencyInput({
         </SelectTrigger>
         <SelectContent>
           {currencies.map((curr) => (
-            <SelectItem key={curr.code} value={curr.code}>
-              {curr.code}
+            <SelectItem key={curr.id} value={curr.short_code}>
+              {curr.short_code}
             </SelectItem>
           ))}
         </SelectContent>
