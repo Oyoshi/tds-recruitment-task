@@ -1,143 +1,186 @@
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { useReducer, useMemo } from 'react';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from '@/components/ui/Card';
+import { LoadingIndicator } from '@/components/ui/LoadingIndicator';
 import { useCurrencies, useConversion } from '@/hooks/useCurrencies';
 import { useDebounce } from '@/hooks/useDebounce';
+import { DEBOUNCE_DELAY_IN_MS } from '@/lib/constants';
 import { formatAmount, parseAmount, getCurrentTime } from '@/lib/utils';
 import { CurrencyInput } from './CurrencyInput';
 
-const DEBOUNCE_DELAY_IN_MS = 500;
+type Source = 'first' | 'second';
 
-// Should be extracted to a separate component but I don't want to mix custom ones with the shadcnui atomic components
-function LoadingIndicator() {
-  return (
-    <div className="flex justify-center items-center">
-      <p>Loading currencies...</p>
-    </div>
-  );
+interface ConverterState {
+  firstAmount: string;
+  firstCurrency: string;
+  secondAmount: string;
+  secondCurrency: string;
+  activeSource: Source;
 }
 
+type ConverterAction =
+  | { type: 'SET_FIRST_AMOUNT'; payload: string }
+  | { type: 'SET_SECOND_AMOUNT'; payload: string }
+  | { type: 'SET_FIRST_CURRENCY'; payload: string }
+  | { type: 'SET_SECOND_CURRENCY'; payload: string }
+  | { type: 'CLEAR_AMOUNTS'; payload: Source };
+
+function converterReducer(
+  state: ConverterState,
+  action: ConverterAction
+): ConverterState {
+  switch (action.type) {
+    case 'SET_FIRST_AMOUNT':
+      return { ...state, firstAmount: action.payload, activeSource: 'first' };
+    case 'SET_SECOND_AMOUNT':
+      return { ...state, secondAmount: action.payload, activeSource: 'second' };
+    case 'SET_FIRST_CURRENCY':
+      return { ...state, firstCurrency: action.payload, activeSource: 'first' };
+    case 'SET_SECOND_CURRENCY':
+      return {
+        ...state,
+        secondCurrency: action.payload,
+        activeSource: 'second',
+      };
+    case 'CLEAR_AMOUNTS':
+      return {
+        ...state,
+        firstAmount: '',
+        secondAmount: '',
+        activeSource: action.payload,
+      };
+    default:
+      return state;
+  }
+}
+
+const initialState: ConverterState = {
+  firstAmount: '1.00',
+  firstCurrency: 'USD',
+  secondAmount: '',
+  secondCurrency: 'PLN',
+  activeSource: 'first',
+};
+
 export function CurrencyConverterForm() {
-  /* Decided to use separated 4 states to represent bi-drectional data flow just for the simplicity.
-   * Normally, I would consider using a more robust state management approach (like useReducer, zustand)
-   * or a form library for handling complex forms.
-   */
-  const [firstAmount, setFirstAmount] = useState('');
-  const [firstCurrency, setFirstCurrency] = useState('PLN');
-  const [secondAmount, setSecondAmount] = useState('');
-  const [secondCurrency, setSecondCurrency] = useState('EUR');
+  const [state, dispatch] = useReducer(converterReducer, initialState);
 
-  const [activeSource, setActiveSource] = useState<'first' | 'second'>('first');
-
-  // No handling error because of time constraints of the task but normally I would show a toaster and log the error via logger service
   const { data: currencies = [], isLoading: isLoadingCurrencies } =
     useCurrencies();
 
-  // Split debounce into separate states to prevent value flickering when switching active inputs
-  // This ensures that the conversion logic always uses the debounced value corresponding to the correct input field
-  const debouncedFirstAmount = useDebounce(firstAmount, DEBOUNCE_DELAY_IN_MS);
-  const debouncedSecondAmount = useDebounce(secondAmount, DEBOUNCE_DELAY_IN_MS);
-
-  // Determine the active source value based on the debounced states
-  const activeAmountRaw =
-    activeSource === 'first' ? debouncedFirstAmount : debouncedSecondAmount;
-  const amountToConvert = parseAmount(activeAmountRaw);
-
-  const { data: convertedData } = useConversion(
-    activeSource === 'first' ? firstCurrency : secondCurrency,
-    activeSource === 'first' ? secondCurrency : firstCurrency,
-    amountToConvert
+  const debouncedActiveAmount = useDebounce(
+    state.activeSource === 'first' ? state.firstAmount : state.secondAmount,
+    DEBOUNCE_DELAY_IN_MS
   );
 
+  const { data: convertedData } = useConversion(
+    state.activeSource === 'first' ? state.firstCurrency : state.secondCurrency,
+    state.activeSource === 'first' ? state.secondCurrency : state.firstCurrency,
+    parseAmount(debouncedActiveAmount)
+  );
+
+  // Derived Values - Centralized display logic
   const displayFirstAmount =
-    activeSource === 'second' && convertedData
+    state.activeSource === 'second' && convertedData
       ? formatAmount(convertedData.value)
-      : firstAmount;
+      : state.firstAmount;
 
   const displaySecondAmount =
-    activeSource === 'first' && convertedData
+    state.activeSource === 'first' && convertedData
       ? formatAmount(convertedData.value)
-      : secondAmount;
+      : state.secondAmount;
 
-  const handleFirstAmountChange = (val: string) => {
-    const numeric = parseFloat(val);
-    if (!isNaN(numeric) && numeric < 0) return;
-    setActiveSource('first');
-    setFirstAmount(val);
+  const exchangeRateLabel = useMemo(() => {
+    if (state.firstCurrency === state.secondCurrency)
+      return `1 ${state.firstCurrency} = 1.00 ${state.secondCurrency}`;
+    if (!displayFirstAmount || !displaySecondAmount) {
+      return null;
+    }
+    return `1 ${state.firstCurrency} = ${formatAmount(parseAmount(displaySecondAmount) / parseAmount(displayFirstAmount))} ${state.secondCurrency}`;
+  }, [displayFirstAmount, displaySecondAmount]);
+
+  const handleAmountChange = (source: Source, val: string) => {
     if (val === '') {
-      setSecondAmount('');
+      dispatch({ type: 'CLEAR_AMOUNTS', payload: source });
+      return;
     }
+    dispatch({
+      type: source === 'first' ? 'SET_FIRST_AMOUNT' : 'SET_SECOND_AMOUNT',
+      payload: val,
+    });
   };
 
-  const handleSecondAmountChange = (val: string) => {
-    const numeric = parseFloat(val);
-    if (!isNaN(numeric) && numeric < 0) return;
-    setActiveSource('second');
-    setSecondAmount(val);
-    if (val === '') {
-      setFirstAmount('');
-    }
+  const handleFirstAmountChange = (value: string) => {
+    handleAmountChange('first', value);
   };
 
-  const handleFirstCurrencyChange = (val: string) => {
-    if (activeSource !== 'first') {
-      setFirstAmount(displayFirstAmount);
-    }
-    setActiveSource('first');
-    setFirstCurrency(val);
+  const handleSecondAmountChange = (value: string) => {
+    handleAmountChange('second', value);
   };
 
-  const handleSecondCurrencyChange = (val: string) => {
-    if (activeSource !== 'second') {
-      setSecondAmount(displaySecondAmount);
+  const handleFirstCurrencyChange = (value: string) => {
+    if (state.activeSource === 'second') {
+      dispatch({ type: 'SET_FIRST_AMOUNT', payload: displayFirstAmount });
     }
-    setActiveSource('second');
-    setSecondCurrency(val);
+    dispatch({ type: 'SET_FIRST_CURRENCY', payload: value });
+  };
+
+  const handleSecondCurrencyChange = (value: string) => {
+    if (state.activeSource === 'first') {
+      dispatch({ type: 'SET_SECOND_AMOUNT', payload: displaySecondAmount });
+    }
+    dispatch({ type: 'SET_SECOND_CURRENCY', payload: value });
   };
 
   return (
     <Card className="w-full max-w-md shadow-lg">
       <CardHeader className="pb-2 text-center">
-        <h1 className="text-sm font-medium text-muted-foreground mb-1">
-          Forex Currency Converter
+        <h1 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+          Currency Converter
         </h1>
-        {!isLoadingCurrencies &&
-          !!displayFirstAmount &&
-          !!displaySecondAmount && (
-            <CardTitle className="text-xl font-bold text-primary">
-              {displayFirstAmount} {firstCurrency} = {displaySecondAmount}{' '}
-              {secondCurrency}
-            </CardTitle>
-          )}
+        {exchangeRateLabel && (
+          <CardTitle className="text-lg mt-2">
+            <p>{exchangeRateLabel}</p>
+          </CardTitle>
+        )}
       </CardHeader>
+
       <CardContent>
         {isLoadingCurrencies ? (
-          <LoadingIndicator />
+          <LoadingIndicator label="Loading currencies..." />
         ) : (
-          <form className="flex flex-col gap-4 mb-4">
-            {/* Using a form as a semantic container, even though there's no submission */}
+          <form className="flex flex-col gap-4 mb-6">
             <CurrencyInput
               prefix="first"
               currencies={currencies}
               value={displayFirstAmount}
-              onValueChange={handleFirstAmountChange}
-              currency={firstCurrency}
+              onAmountChange={handleFirstAmountChange}
+              currency={state.firstCurrency}
               onCurrencyChange={handleFirstCurrencyChange}
             />
+
             <CurrencyInput
               prefix="second"
               currencies={currencies}
               value={displaySecondAmount}
-              onValueChange={handleSecondAmountChange}
-              currency={secondCurrency}
+              onAmountChange={handleSecondAmountChange}
+              currency={state.secondCurrency}
               onCurrencyChange={handleSecondCurrencyChange}
             />
           </form>
         )}
-        {!isLoadingCurrencies && (
-          <p className="text-xs text-center text-muted-foreground">
-            Last updated: {getCurrentTime()}
+
+        <CardFooter>
+          <p className="text-xs text-center text-muted-foreground italic">
+            Market rates sourced via CurrencyBeacon • Last updated:{' '}
+            {getCurrentTime()}
           </p>
-        )}
+        </CardFooter>
       </CardContent>
     </Card>
   );

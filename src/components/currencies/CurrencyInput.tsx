@@ -13,22 +13,20 @@ const BORDERLESS_INPUT_CLASSES = 'border-0 bg-transparent shadow-none';
 const CURRENCY_VALUE_INPUT_PLACEHOLDER = '0.00';
 const CURRENCY_CODE_INPUT_PLACEHOLDER = 'USD';
 
-type InputValueChangeHandler = (val: string) => void;
-
 interface CurrencyInputProps {
   currencies: Currency[];
   prefix: string;
   value: string;
-  onValueChange: InputValueChangeHandler;
+  onAmountChange: (val: string) => void;
   currency: string;
-  onCurrencyChange: InputValueChangeHandler;
+  onCurrencyChange: (val: string) => void;
 }
 
 export function CurrencyInput({
   currencies,
   prefix,
   value,
-  onValueChange,
+  onAmountChange,
   currency,
   onCurrencyChange,
 }: CurrencyInputProps) {
@@ -39,7 +37,7 @@ export function CurrencyInput({
         className={BORDERLESS_INPUT_CLASSES}
         placeholder={CURRENCY_VALUE_INPUT_PLACEHOLDER}
         value={value}
-        onChange={(e) => onValueChange(e.target.value)}
+        onChange={(e) => onAmountChange(e.target.value)}
         aria-label={`${prefix} field to input currency value`}
         id={`${prefix}-currency-value-input`}
         min="0"
