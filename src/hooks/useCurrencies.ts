@@ -1,4 +1,5 @@
 import { CACHE_TIMES } from '@/lib/queryClient';
+import type { ConversionRate } from '@/lib/types';
 import { FXService } from '@/services/FXService';
 import { useQuery } from '@tanstack/react-query';
 
@@ -22,10 +23,25 @@ export const useCurrencies = () => {
   });
 };
 
-export const useConversion = (from: string, to: string, amount: number) => {
+export const useConversion = (
+  from: string,
+  to: string,
+  amount: number,
+  onLastConversionUpdate: (data: Promise<ConversionRate>) => void
+) => {
   return useQuery({
     queryKey: ['convert', from, to, amount],
-    queryFn: () => fxService.convert(from, to, amount),
+    queryFn: () => {
+      if (from === to) {
+        const resData = { from, to, amount, value: amount } as ConversionRate;
+        const promiseRes = Promise.resolve(resData);
+        onLastConversionUpdate(promiseRes);
+        return promiseRes;
+      }
+      const res = fxService.convert(from, to, amount);
+      onLastConversionUpdate(res);
+      return res;
+    },
     enabled: !!from && !!to && amount > 0,
     staleTime: CACHE_TIMES.CONVERSION,
   });

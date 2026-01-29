@@ -2,10 +2,13 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { useCurrencies, useConversion } from '@/hooks/useCurrencies';
 import { useDebounce } from '@/hooks/useDebounce';
+import type { ConversionRate } from '@/lib/types';
 import { formatAmount, parseAmount, getCurrentTime } from '@/lib/utils';
 import { CurrencyInput } from './CurrencyInput';
 
 const DEBOUNCE_DELAY_IN_MS = 500;
+
+const LAST_CURRENCY_CONVERSION_LIMIT = 5;
 
 // Should be extracted to a separate component but I don't want to mix custom ones with the shadcnui atomic components
 function LoadingIndicator() {
@@ -28,6 +31,22 @@ export function CurrencyConverterForm() {
 
   const [activeSource, setActiveSource] = useState<'first' | 'second'>('first');
 
+  const [lastConversions, setLastConversions] = useState<ConversionRate[]>([]);
+
+  const updateLastConversions = async (
+    conversionData: Promise<ConversionRate>
+  ) => {
+    let newLastConversions = lastConversions;
+    const awaitedConversionData = await conversionData;
+    if (lastConversions.length === LAST_CURRENCY_CONVERSION_LIMIT) {
+      newLastConversions.pop();
+      newLastConversions = [awaitedConversionData, ...lastConversions];
+      setLastConversions([...newLastConversions]);
+      return;
+    }
+    setLastConversions((prev) => [awaitedConversionData, ...prev]);
+  };
+
   // No handling error because of time constraints of the task but normally I would show a toaster and log the error via logger service
   const { data: currencies = [], isLoading: isLoadingCurrencies } =
     useCurrencies();
@@ -45,7 +64,8 @@ export function CurrencyConverterForm() {
   const { data: convertedData } = useConversion(
     activeSource === 'first' ? firstCurrency : secondCurrency,
     activeSource === 'first' ? secondCurrency : firstCurrency,
-    amountToConvert
+    amountToConvert,
+    updateLastConversions
   );
 
   const displayFirstAmount =
@@ -110,6 +130,11 @@ export function CurrencyConverterForm() {
           )}
       </CardHeader>
       <CardContent>
+        {lastConversions.map(({ from, to, amount, value }) => (
+          <p>
+            {from} {to} {amount} {value}
+          </p>
+        ))}
         {isLoadingCurrencies ? (
           <LoadingIndicator />
         ) : (
